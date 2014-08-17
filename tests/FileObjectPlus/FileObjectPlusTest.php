@@ -123,11 +123,11 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitWithSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithDefaultOffsetReducedLimitAndDefaultSearchTerm(\DCarbone\FileObjectPlus $fileObject)
     {
-        $lines = $fileObject->paginateLines(5, 25, 'hsdivision');
+        $lines = $fileObject->paginateLines(0, 5);
 
-        $this->assertCount(0, $lines);
+        $this->assertCount(5, $lines);
     }
 
     /**
@@ -136,11 +136,24 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithDefaultOffsetReducedLimitAndDefaultSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitAndDefaultSearchTerm(\DCarbone\FileObjectPlus $fileObject)
     {
-        $lines = $fileObject->paginateLines(0, 5);
+        $lines = $fileObject->paginateLines(40);
 
-        $this->assertCount(5, $lines);
+        $this->assertCount(9, $lines);
+    }
+
+    /**
+     * @covers \DCarbone\FileObjectPlus::paginateLines
+     * @uses \DCarbone\FileObjectPlus
+     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
+     * @param \DCarbone\FileObjectPlus $fileObject
+     */
+    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitWithSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    {
+        $lines = $fileObject->paginateLines(40, 25, '/twiki/bin/view/');
+
+        $this->assertCount(4, $lines);
     }
 
     /**

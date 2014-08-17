@@ -29,7 +29,7 @@ class FileObjectPlus extends \SplFileObject
         if (DIRECTORY_SEPARATOR === '/')
             $this->lineCount = (int)trim(shell_exec('wc -l "'.$this->getRealPath().'"'));
         else
-            $this->lineCount = (int)trim(shell_exec('findstr /R /N "^" "'.$this->getRealPath().'" | find /c ":"'));
+            $this->lineCount = (int)trim(shell_exec('type "'.$this->getRealPath().'" | find /c /v "~~~"'));
     }
 
     /**
@@ -94,30 +94,27 @@ class FileObjectPlus extends \SplFileObject
         if ($search !== null && !is_scalar($search))
             throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 3 expected to be scalar value or null, '.gettype($search).' seen.');
 
-        $linei = 0;
-
-        if ($offset === 0)
-            $offset = -1;
-
         if ($limit === -1)
             $limit = $this->lineCount;
 
         $linesTotal = 0;
         $lines = array();
 
+        if ($offset === 0)
+            $this->rewind();
+        else
+            $this->seek($offset + 1);
+
         if ($search === null)
         {
-            $this->rewind();
             while($this->valid())
             {
                 if ($linesTotal === $limit)
                     break;
 
-                if ($linei++ >= $offset)
-                {
-                    $lines[] = $this->current();
-                    $linesTotal++;
-                }
+                $lines[] = trim($this->current());
+                $linesTotal++;
+
                 $this->next();
             }
         }
@@ -125,21 +122,18 @@ class FileObjectPlus extends \SplFileObject
         {
             $search = (string)$search;
 
-            $this->rewind();
             while($this->valid())
             {
                 if ($linesTotal === $limit)
                     break;
 
-                $current = $this->current();
+                $current = trim($this->current());
                 if (stripos($current, $search) !== false)
                 {
-                    if ($linei++ >= $offset)
-                    {
-                        $lines[] = trim($current);
-                        $linesTotal++;
-                    }
+                    $lines[] = $current;
+                    $linesTotal++;
                 }
+
                 $this->next();
             }
         }
