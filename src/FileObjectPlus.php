@@ -61,7 +61,7 @@ class FileObjectPlus extends \SplFileObject
 
         while ($this->valid())
         {
-            if (stripos($this->current(), $string) !== false)
+            if (stripos(trim($this->current()), $string) !== false)
                 $count++;
 
             $this->next();
