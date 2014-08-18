@@ -164,7 +164,7 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      */
     public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitWithSearchTerm(\DCarbone\FileObjectPlus $fileObject)
     {
-        $lines = $fileObject->paginateLines(40, 25, '/twiki/bin/view/');
+        $lines = $fileObject->paginateLines(12, 25, '/twiki/bin/view/');
 
         $this->assertCount(4, $lines);
     }

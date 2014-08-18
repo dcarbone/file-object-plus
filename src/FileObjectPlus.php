@@ -57,17 +57,17 @@ class FileObjectPlus extends \SplFileObject
 
         $count = 0;
 
-        $this->rewind();
+        parent::rewind();
 
-        while ($this->valid())
+        while (parent::valid())
         {
-            if (stripos(trim($this->current()), $string) !== false)
+            if (stripos(trim(parent::current()), $string) !== false)
                 $count++;
 
-            $this->next();
+            parent::next();
         }
 
-        $this->rewind();
+        parent::rewind();
 
         return $count;
     }
@@ -97,51 +97,81 @@ class FileObjectPlus extends \SplFileObject
         if ($limit === -1)
             $limit = $this->lineCount;
 
+        if ($search === null)
+            return $this->paginateLinesNoSearch($offset, $limit);
+        else
+            return $this->paginateLinesSearch($offset, $limit, $search);
+    }
+
+    /**
+     * @param int $offset
+     * @param int $limit
+     * @return array
+     */
+    protected function paginateLinesNoSearch($offset, $limit)
+    {
         $linesTotal = 0;
         $lines = array();
 
+        parent::seek(($offset + 1));
+
+        while(parent::valid())
+        {
+            if ($linesTotal === $limit)
+                break;
+
+            if (($current = trim(parent::current())) !== '')
+            {
+                $lines[] = $current;
+                $linesTotal++;
+            }
+
+            parent::next();
+        }
+
+        parent::rewind();
+
+        return $lines;
+    }
+
+    /**
+     * @param int $offset
+     * @param int $limit
+     * @param mixed $search
+     * @return array
+     */
+    protected function paginateLinesSearch($offset, $limit, $search)
+    {
+        $linesTotal = 0;
+        $lines = array();
+        $linei = 0;
+
         if ($offset === 0)
-            $this->rewind();
-        else
-            $this->seek(($offset + 1));
+            $offset = -1;
 
-        if ($search === null)
+        parent::rewind();
+
+        $search = (string)$search;
+
+        while($this->valid())
         {
-            while($this->valid())
-            {
-                if ($linesTotal === $limit)
-                    break;
+            if ($linesTotal === $limit)
+                break;
 
-                if (($current = trim($this->current())) !== '')
+            $current = trim(parent::current());
+            if ($current !== '' && stripos($current, $search) !== false)
+            {
+                if ($linei++ > $offset)
                 {
                     $lines[] = $current;
                     $linesTotal++;
                 }
-
-                $this->next();
             }
-        }
-        else
-        {
-            $search = (string)$search;
 
-            while($this->valid())
-            {
-                if ($linesTotal === $limit)
-                    break;
-
-                $current = trim($this->current());
-                if ($current !== '' && stripos($current, $search) !== false)
-                {
-                    $lines[] = $current;
-                    $linesTotal++;
-                }
-
-                $this->next();
-            }
+            parent::next();
         }
 
-        $this->rewind();
+        parent::rewind();
 
         return $lines;
     }
