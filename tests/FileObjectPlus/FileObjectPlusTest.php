@@ -46,7 +46,7 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testCanGetLineCountOfFile(\DCarbone\FileObjectPlus $fileObject)
+    public function testCanGetLineCount(\DCarbone\FileObjectPlus $fileObject)
     {
         $lineCount = $fileObject->getLineCount();
 
@@ -59,7 +59,7 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testGetLineCountLikeOfFileWithStringThatExistsInFile(\DCarbone\FileObjectPlus $fileObject)
+    public function testGetLineCountLikeWithStringThatExistsInFile(\DCarbone\FileObjectPlus $fileObject)
     {
         $lineCount = $fileObject->getLineCountLike('lj1036.inktomisearch.com');
 
@@ -72,11 +72,24 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testGetLineCountLikeOfFileReturnsZeroWithStringThatDoesNotExistInFile(\DCarbone\FileObjectPlus $fileObject)
+    public function testGetLineCountLikeReturnsZeroWithStringThatDoesNotExistInFile(\DCarbone\FileObjectPlus $fileObject)
     {
         $lineCount = $fileObject->getLineCountLike('this string doesn\'t exist!');
 
         $this->assertEquals(0, $lineCount);
+    }
+
+    /**
+     * @covers \DCarbone\FileObjectPlus::getLineCountLike
+     * @uses \DCarbone\FileObjectPlus
+     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
+     * @param \DCarbone\FileObjectPlus $fileObject
+     */
+    public function testGetLineCountLikeReturnsAllLinesWithEmptyStringValue(\DCarbone\FileObjectPlus $fileObject)
+    {
+        $lineCount = $fileObject->getLineCountLike(false);
+
+        $this->assertEquals(50, $lineCount);
     }
 
     /**

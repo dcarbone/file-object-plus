@@ -103,7 +103,7 @@ class FileObjectPlus extends \SplFileObject
         if ($offset === 0)
             $this->rewind();
         else
-            $this->seek($offset + 1);
+            $this->seek(($offset + 1));
 
         if ($search === null)
         {
@@ -112,8 +112,11 @@ class FileObjectPlus extends \SplFileObject
                 if ($linesTotal === $limit)
                     break;
 
-                $lines[] = trim($this->current());
-                $linesTotal++;
+                if (($current = trim($this->current())) !== '')
+                {
+                    $lines[] = $current;
+                    $linesTotal++;
+                }
 
                 $this->next();
             }
@@ -128,7 +131,7 @@ class FileObjectPlus extends \SplFileObject
                     break;
 
                 $current = trim($this->current());
-                if (stripos($current, $search) !== false)
+                if ($current !== '' && stripos($current, $search) !== false)
                 {
                     $lines[] = $current;
                     $linesTotal++;
