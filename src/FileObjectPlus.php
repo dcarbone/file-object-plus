@@ -113,7 +113,10 @@ class FileObjectPlus extends \SplFileObject
         $linesTotal = 0;
         $lines = array();
 
-        parent::seek(($offset + 1));
+        if ($offset === 0)
+            parent::rewind();
+        else
+            parent::seek(($offset + 1));
 
         while(parent::valid())
         {
