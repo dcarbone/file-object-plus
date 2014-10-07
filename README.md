@@ -1,7 +1,7 @@
 file-object-plus
 ================
 
-A simple extension of the PHP class SplFileObject
+A simple extension of the PHP class [SplFileObject](http://php.net/manual/en/class.splfileobject.php)
 
 Build status:
 - master: [![Build Status](https://travis-ci.org/dcarbone/file-object-plus.svg?branch=master)](https://travis-ci.org/dcarbone/file-object-plus)
@@ -9,7 +9,7 @@ Build status:
 
 ## Basics:
 
-This class is a very simple extension of the base PHP [SplFileObject](!http://php.net/manual/en/class.splfileobject.php).
+This class is a very simple extension of the base PHP [SplFileObject](http://php.net/manual/en/class.splfileobject.php).
 As such, it has all the same functionality as the base class with a few minor additions.
 
 ### Line Counting
