@@ -75,24 +75,24 @@ class FileObjectPlus extends \SplFileObject
     /**
      * @param int $offset
      * @param int $limit
-     * @param mixed $search
+     * @param int|float|string|null $search
      * @return array
      * @throws \InvalidArgumentException
      */
     public function paginateLines($offset = 0, $limit = 25, $search = null)
     {
         if (!is_int($offset))
-            throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 1 expected to be integer, '.gettype($offset).' seen.');
+            throw new \InvalidArgumentException('Argument 1 expected to be integer, '.gettype($offset).' seen.');
         if ($offset < 0)
-            throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 1 expected to be >= 0, "'.$offset.'" seen.');
+            throw new \InvalidArgumentException('Argument 1 expected to be >= 0, "'.$offset.'" seen.');
 
         if (!is_int($limit))
-            throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 2 expected to be integer, '.gettype($limit).' seen.');
+            throw new \InvalidArgumentException('Argument 2 expected to be integer, '.gettype($limit).' seen.');
         if ($limit < -1)
-            throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 2 must be >= -1, "'.$limit.'" seen.');
+            throw new \InvalidArgumentException('Argument 2 must be >= -1, "'.$limit.'" seen.');
 
         if ($search !== null && !is_scalar($search))
-            throw new \InvalidArgumentException('FileObjectPlus::paginateLines - Argument 3 expected to be scalar value or null, '.gettype($search).' seen.');
+            throw new \InvalidArgumentException('Argument 3 expected to be scalar value or null, '.gettype($search).' seen.');
 
         if ($limit === -1)
             $limit = $this->lineCount;
@@ -116,13 +116,10 @@ class FileObjectPlus extends \SplFileObject
         if ($offset === 0)
             parent::rewind();
         else
-            parent::seek(($offset + 1));
+            parent::seek($offset + 1);
 
-        while(parent::valid())
+        while(parent::valid() && $linesTotal < $limit)
         {
-            if ($linesTotal === $limit)
-                break;
-
             if (($current = trim(parent::current())) !== '')
             {
                 $lines[] = $current;
@@ -147,7 +144,7 @@ class FileObjectPlus extends \SplFileObject
     {
         $linesTotal = 0;
         $lines = array();
-        $linei = 0;
+        $linei = -1;
 
         if ($offset === 0)
             $offset = -1;
@@ -156,19 +153,13 @@ class FileObjectPlus extends \SplFileObject
 
         $search = (string)$search;
 
-        while($this->valid())
+        while(parent::valid() && $linesTotal < $limit)
         {
-            if ($linesTotal === $limit)
-                break;
-
-            $current = trim(parent::current());
-            if ($current !== '' && stripos($current, $search) !== false)
+            if (($current = trim(parent::current())) !== '' && stripos($current, $search) !== false
+                && ++$linei > $offset)
             {
-                if ($linei++ > $offset)
-                {
-                    $lines[] = $current;
-                    $linesTotal++;
-                }
+                $lines[] = $current;
+                $linesTotal++;
             }
 
             parent::next();

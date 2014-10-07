@@ -145,6 +145,7 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
+     * @covers \DCarbone\FileObjectPlus::paginateLinesNoSearch
      * @uses \DCarbone\FileObjectPlus
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
@@ -158,6 +159,7 @@ class FileObjectPlusTest extends PHPUnit_Framework_TestCase
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
+     * @covers \DCarbone\FileObjectPlus::paginateLinesSearch
      * @uses \DCarbone\FileObjectPlus
      * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @param \DCarbone\FileObjectPlus $fileObject
