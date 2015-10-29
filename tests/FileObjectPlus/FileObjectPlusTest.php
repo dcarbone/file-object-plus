@@ -1,221 +1,194 @@
 <?php
 
+/*
+    Modified SplFileObject class that adds Countable interface and Pagination methods
+    Copyright (C) 2013-2015  Daniel Paul Carbone (daniel.p.carbone@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ */
+
 /**
  * Class FileObjectPlusTest
  */
 class FileObjectPlusTest extends PHPUnit_Framework_TestCase
 {
-    /**
-     * @covers \DCarbone\FileObjectPlus::__construct
-     * @uses \DCarbone\FileObjectPlus
-     * @uses \SplFileObject
-     * @return \DCarbone\FileObjectPlus
-     */
-    public function testCanConstructFileObjectPlusWithValidFilenameParameter()
-    {
-        $fileObject = new \DCarbone\FileObjectPlus(__DIR__.'/../misc/example.txt');
+    /** @var \DCarbone\FileObjectPlus */
+    protected $fileObject;
 
-        return $fileObject;
+    /**
+     * Initialize local instance of FileObjectPlus
+     *
+     * Since we are not overloading the constructor in any way, this should not pose a problem...
+     */
+    protected function setUp()
+    {
+        $this->fileObject = new \DCarbone\FileObjectPlus(__DIR__.'/../misc/example.txt');
     }
 
     /**
-     * @covers \DCarbone\FileObjectPlus::__construct
-     * @uses \DCarbone\FileObjectPlus
-     * @expectedException \InvalidArgumentException
+     * @covers \DCarbone\FileObjectPlus::count
      */
-    public function testExceptionThrownWhenNonStringFilenameValuePassed()
+    public function testCanGetLineCount()
     {
-        $fileObject = new \DCarbone\FileObjectPlus(array('nossir'));
+        $this->assertEquals(50, count($this->fileObject));
     }
 
     /**
-     * @covers \DCarbone\FileObjectPlus::__construct
-     * @covers \SplFileObject::__construct
-     * @uses \DCarbone\FileObjectPlus
-     * @uses \SplFileObject
-     * @expectedException \RuntimeException
+     * @covers \DCarbone\FileObjectPlus::countLinesContaining
      */
-    public function testExceptionThrownWhenNonExistentFilenamePassed()
+    public function testGetLineCountLikeWithStringThatExistsInFile()
     {
-        $fileObject = new \DCarbone\FileObjectPlus('nope.txt');
-    }
-
-    /**
-     * @covers \DCarbone\FileObjectPlus::getLineCount
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
-     */
-    public function testCanGetLineCount(\DCarbone\FileObjectPlus $fileObject)
-    {
-        $lineCount = $fileObject->getLineCount();
-
-        $this->assertEquals(50, $lineCount);
-    }
-
-    /**
-     * @covers \DCarbone\FileObjectPlus::getLineCountLike
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
-     */
-    public function testGetLineCountLikeWithStringThatExistsInFile(\DCarbone\FileObjectPlus $fileObject)
-    {
-        $lineCount = $fileObject->getLineCountLike('lj1036.inktomisearch.com');
+        $lineCount = $this->fileObject->countLinesContaining('lj1036.inktomisearch.com');
 
         $this->assertEquals(1, $lineCount);
     }
 
     /**
-     * @covers \DCarbone\FileObjectPlus::getLineCountLike
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
+     * @covers \DCarbone\FileObjectPlus::countLinesContaining
      */
-    public function testGetLineCountLikeReturnsZeroWithStringThatDoesNotExistInFile(\DCarbone\FileObjectPlus $fileObject)
+    public function testGetLineCountLikeReturnsZeroWithStringThatDoesNotExistInFile()
     {
-        $lineCount = $fileObject->getLineCountLike('this string doesn\'t exist!');
+        $lineCount = $this->fileObject->countLinesContaining('this string doesn\'t exist!');
 
         $this->assertEquals(0, $lineCount);
     }
 
     /**
-     * @covers \DCarbone\FileObjectPlus::getLineCountLike
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
+     * @covers \DCarbone\FileObjectPlus::countLinesContaining
      */
-    public function testGetLineCountLikeReturnsAllLinesWithEmptyStringValue(\DCarbone\FileObjectPlus $fileObject)
+    public function testGetLineCountLikeReturnsAllLinesWithEmptyStringValue()
     {
-        $lineCount = $fileObject->getLineCountLike(false);
+        $lineCount = $this->fileObject->countLinesContaining('');
 
         $this->assertEquals(50, $lineCount);
     }
 
     /**
-     * @covers \DCarbone\FileObjectPlus::getLineCountLike
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @expectedException \InvalidArgumentException
-     * @param \DCarbone\FileObjectPlus $fileObject
+     * @covers \DCarbone\FileObjectPlus::countLinesContaining
      */
-    public function textExceptionThrownByGetLineCountLikeWithNonScalarParameter(\DCarbone\FileObjectPlus $fileObject)
+    public function textExceptionThrownByGetLineCountLikeWithNonScalarParameter()
     {
-        $lineCount = $fileObject->getLineCountLike(array('nope'));
+        $this->fileObject->countLinesContaining(array('nope'));
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithDefaultParameters(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithDefaultParameters()
     {
-        $lines = $fileObject->paginateLines();
-
+        $lines = $this->fileObject->paginateLines();
         $this->assertCount(25, $lines);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithDefaultOffsetAndLimitWithSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithDefaultOffsetAndLimitWithSearchTerm()
     {
-        $lines = $fileObject->paginateLines(0, 25, 'hsdivision');
-
+        $lines = $this->fileObject->paginateLines(0, 25, 'hsdivision');
         $this->assertCount(1, $lines);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithDefaultOffsetReducedLimitAndDefaultSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithDefaultOffsetReducedLimitAndDefaultSearchTerm()
     {
-        $lines = $fileObject->paginateLines(0, 5);
-
+        $lines = $this->fileObject->paginateLines(0, 5);
         $this->assertCount(5, $lines);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
      * @covers \DCarbone\FileObjectPlus::paginateLinesNoSearch
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitAndDefaultSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitAndNoSearchTermIncludingEmptyLines()
     {
-        $lines = $fileObject->paginateLines(40);
+        $lines = $this->fileObject->paginateLines(40);
+        $this->assertCount(10, $lines);
+    }
 
+    /**
+     * @covers \DCarbone\FileObjectPlus::paginateLines
+     * @covers \DCarbone\FileObjectPlus::paginateLinesNoSearch
+     */
+    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitAndNoSearchTermExcludingEmptyLines()
+    {
+        $lines = $this->fileObject->paginateLines(40, 25, null, false);
         $this->assertCount(9, $lines);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
      * @covers \DCarbone\FileObjectPlus::paginateLinesSearch
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitWithSearchTerm(\DCarbone\FileObjectPlus $fileObject)
+    public function testPaginateLinesWithIncreasedOffsetAndDefaultLimitWithSearchTerm()
     {
-        $lines = $fileObject->paginateLines(12, 25, '/twiki/bin/view/');
+        $lines = $this->fileObject->paginateLines(12, 25, '/twiki/bin/view/');
 
         $this->assertCount(4, $lines);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @expectedException \InvalidArgumentException
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testExceptionThrownByPaginateLinesWithInvalidIntegerFirstArgument(\DCarbone\FileObjectPlus $fileObject)
+    public function testExceptionThrownByPaginateLinesWithInvalidIntegerFirstArgument()
     {
-        $list = $fileObject->paginateLines(-7);
+        $this->fileObject->paginateLines(-7);
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @expectedException \InvalidArgumentException
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testExceptionThrownByPaginateLinesWithNonIntegerFirstArgument(\DCarbone\FileObjectPlus $fileObject)
+    public function testExceptionThrownByPaginateLinesWithNonIntegerFirstArgument()
     {
-        $list = $fileObject->paginateLines('forty seven');
+        $this->fileObject->paginateLines('forty seven');
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @expectedException \InvalidArgumentException
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testExceptionThrownByPaginateLinesWithNonIntegerSecondArgument(\DCarbone\FileObjectPlus $fileObject)
+    public function testExceptionThrownByPaginateLinesWithNonIntegerSecondArgument()
     {
-        $list = $fileObject->paginateLines(0, 'seventy 2');
+        $this->fileObject->paginateLines(0, 'seventy 2');
     }
 
     /**
      * @covers \DCarbone\FileObjectPlus::paginateLines
-     * @uses \DCarbone\FileObjectPlus
-     * @depends testCanConstructFileObjectPlusWithValidFilenameParameter
      * @expectedException \InvalidArgumentException
-     * @param \DCarbone\FileObjectPlus $fileObject
      */
-    public function testExceptionThrownByPaginateLinesWithInvalidIntegerSecondArgument(\DCarbone\FileObjectPlus $fileObject)
+    public function testExceptionThrownByPaginateLinesWithInvalidIntegerSecondArgument()
     {
-        $list = $fileObject->paginateLines(0, -42);
+        $this->fileObject->paginateLines(0, -42);
+    }
+
+    /**
+     * @covers \DCarbone\FileObjectPlus::countLinesContaining
+     * @expectedException \InvalidArgumentException
+     */
+    public function testExceptionThrownWhenPassingNonStringCastableValueToLineCountSearch()
+    {
+        $this->fileObject->countLinesContaining(new \SplFixedArray());
+    }
+
+    /**
+     * @covers \DCarbone\FileObjectPlus::paginateLines
+     * @covers \DCarbone\FileObjectPlus::paginateLinesSearch
+     * @expectedException \InvalidArgumentException
+     */
+    public function testExceptionThrownWhenPassingNonStringCastableValueToPaginateSearch()
+    {
+        $this->fileObject->paginateLines(0, 25, new \SplFixedArray());
     }
 }

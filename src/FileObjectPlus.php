@@ -1,85 +1,73 @@
 <?php namespace DCarbone;
 
+/*
+    Modified SplFileObject class that adds Countable interface and Pagination methods
+    Copyright (C) 2013-2015  Daniel Paul Carbone (daniel.p.carbone@gmail.com)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+ */
+
+use DCarbone\Helpers\FileHelper;
+
 /**
  * Class FileObjectPlus
  * @package DCarbone
  */
-class FileObjectPlus extends \SplFileObject
+class FileObjectPlus extends \SplFileObject implements \Countable
 {
-    /** @var int */
-    protected $lineCount = 0;
-
     /**
-     * @param $filename
-     * @param string $open_mode
-     * @param bool $use_include_path
-     * @param null|resource $context
-     * @throws \InvalidArgumentException
-     */
-    public function __construct($filename, $open_mode = 'r', $use_include_path = false, $context = null)
-    {
-        if (!is_string($filename))
-            throw new \InvalidArgumentException('SplFileObject::__construct - Argument 1 expected to be string, "'.gettype($filename).'" seen.');
-
-        if (is_resource($context))
-            parent::__construct($filename, $open_mode, $use_include_path, $context);
-        else
-            parent::__construct($filename, $open_mode, $use_include_path);
-
-        if (DIRECTORY_SEPARATOR === '/')
-            $this->lineCount = (int)trim(shell_exec('wc -l "'.$this->getRealPath().'"'));
-        else
-            $this->lineCount = (int)trim(shell_exec('type "'.$this->getRealPath().'" | find /c /v "~~~"'));
-    }
-
-    /**
-     * @return int
-     */
-    public function getLineCount()
-    {
-        return $this->lineCount;
-    }
-
-    /**
-     * @param string|int|bool|float $string
+     * TODO: See if way to preserve current line of underlying \SplFileObject
+     *
+     * @param mixed $term
      * @return int
      * @throws \InvalidArgumentException
      */
-    public function getLineCountLike($string)
+    public function countLinesContaining($term)
     {
-        if (!is_scalar($string))
-            throw new \InvalidArgumentException('FileObjectPlus::getLineCountLike - Argument 1 expected to be scalar type, "'.gettype($string).'" seen.');
+        if (is_bool($term) || is_null($term))
+            trigger_error(sprintf('%s::countLinesLike - %s input seen, which results in empty string when typecast. Please check input value.', get_class($this), gettype($term)));
 
-        $string = (string)$string;
-
-        if ($string === '')
-            return $this->lineCount;
-
-        $count = 0;
-
-        parent::rewind();
-
-        while (parent::valid())
+        if (is_scalar($term) || (is_object($term) && method_exists($term, '__toString')))
         {
-            if (stripos(trim(parent::current()), $string) !== false)
-                $count++;
+            $term = (string)$term;
 
-            parent::next();
+            if ($term === '')
+                return count($this);
+
+            $count = 0;
+
+            for(parent::rewind(); parent::valid(); parent::next())
+            {
+                if (stripos(parent::current(), $term) !== false)
+                    $count++;
+            }
+
+            parent::rewind();
+
+            return $count;
         }
 
-        parent::rewind();
-
-        return $count;
+        throw new \InvalidArgumentException(get_class($this).'::countLinesLike - Argument 1 expected to be castable to string, "'.gettype($term).'" seen.');
     }
 
     /**
+     * TODO: See if way to preserve current line of underlying \SplFileObject
+     *
      * @param int $offset
      * @param int $limit
-     * @param int|float|string|null $search
+     * @param int|float|string|null $term
+     * @param bool $includeEmpty Only used if $term is null
      * @return array
-     * @throws \InvalidArgumentException
      */
-    public function paginateLines($offset = 0, $limit = 25, $search = null)
+    public function paginateLines($offset = 0, $limit = 25, $term = null, $includeEmpty = true)
     {
         if (!is_int($offset))
             throw new \InvalidArgumentException('Argument 1 expected to be integer, '.gettype($offset).' seen.');
@@ -91,82 +79,111 @@ class FileObjectPlus extends \SplFileObject
         if ($limit < -1)
             throw new \InvalidArgumentException('Argument 2 must be >= -1, "'.$limit.'" seen.');
 
-        if ($search !== null && !is_scalar($search))
-            throw new \InvalidArgumentException('Argument 3 expected to be scalar value or null, '.gettype($search).' seen.');
-
         if ($limit === -1)
-            $limit = $this->lineCount;
+            $limit = count($this);
 
-        if ($search === null)
-            return $this->paginateLinesNoSearch($offset, $limit);
-        else
-            return $this->paginateLinesSearch($offset, $limit, $search);
+        if ($term === null)
+            return $this->paginateLinesNoSearch($offset, $limit, $includeEmpty);
+
+        return $this->paginateLinesSearch($offset, $limit, $term);
     }
+
+    /**
+     * Count elements of an object
+     * @link http://php.net/manual/en/countable.count.php
+     * @return int The custom count as an integer.
+     * The return value is cast to an integer.
+     * @since 5.1.0
+     */
+    public function count()
+    {
+        return FileHelper::getLineCount($this->getRealPath());
+    }
+
+    //---------------
 
     /**
      * @param int $offset
      * @param int $limit
+     * @param bool $includeEmptyLines
      * @return array
      */
-    protected function paginateLinesNoSearch($offset, $limit)
+    protected function paginateLinesNoSearch($offset, $limit, $includeEmptyLines = true)
     {
-        $linesTotal = 0;
-        $lines = array();
+        $returnLines = array();
+        $returnLinesCount = 0;
 
         if ($offset === 0)
             parent::rewind();
         else
-            parent::seek($offset + 1);
+            parent::seek(($offset + 1));
 
-        while(parent::valid() && $linesTotal < $limit)
+        if ($includeEmptyLines)
         {
-            if (($current = trim(parent::current())) !== '')
+            while(parent::valid() && $returnLinesCount < $limit)
             {
-                $lines[] = $current;
-                $linesTotal++;
+                $returnLines[] = parent::current();
+                $returnLinesCount++;
+                parent::next();
             }
-
-            parent::next();
+        }
+        else
+        {
+            while(parent::valid() && $returnLinesCount < $limit)
+            {
+                if (($current = trim(parent::current())) !== '')
+                {
+                    $returnLines[] = $current;
+                    $returnLinesCount++;
+                }
+                parent::next();
+            }
         }
 
         parent::rewind();
 
-        return $lines;
+        return $returnLines;
     }
 
     /**
      * @param int $offset
      * @param int $limit
-     * @param mixed $search
+     * @param string $term
      * @return array
      */
-    protected function paginateLinesSearch($offset, $limit, $search)
+    protected function paginateLinesSearch($offset, $limit, $term)
     {
-        $linesTotal = 0;
-        $lines = array();
-        $linei = -1;
+        $returnLines = array();
+        $returnLinesCount = 0;
+        $matchingLinesCount = -1;
 
         if ($offset === 0)
             $offset = -1;
 
         parent::rewind();
 
-        $search = (string)$search;
+        if (is_bool($term) || is_null($term))
+            trigger_error(sprintf('%s::paginateLines - %s search input seen, which results in empty string when typecast. Please check input value.', get_class($this), gettype($term)));
 
-        while(parent::valid() && $linesTotal < $limit)
+        if (is_scalar($term) || (is_object($term) && method_exists($term, '__toString')))
         {
-            if (($current = trim(parent::current())) !== '' && stripos($current, $search) !== false
-                && ++$linei > $offset)
+            $term = (string)$term;
+            while(parent::valid() && $returnLinesCount < $limit)
             {
-                $lines[] = $current;
-                $linesTotal++;
+                if (($current = parent::current()) !== '' && stripos($current, $term) !== false && ++$matchingLinesCount > $offset)
+                {
+                    $returnLines[] = $current;
+                    $returnLinesCount++;
+                }
+
+                parent::next();
             }
 
-            parent::next();
+            parent::rewind();
+
+            return $returnLines;
         }
 
-        parent::rewind();
-
-        return $lines;
+        throw new \InvalidArgumentException(get_class($this).'::paginateLines - Search value expected to be castable to string, "'.gettype($term).'" seen.');
     }
 }

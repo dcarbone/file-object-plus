@@ -5,70 +5,71 @@ A simple extension of the PHP class [SplFileObject](http://php.net/manual/en/cla
 
 Build status:
 - master: [![Build Status](https://travis-ci.org/dcarbone/file-object-plus.svg?branch=master)](https://travis-ci.org/dcarbone/file-object-plus)
-- 0.1.5: [![Build Status](https://travis-ci.org/dcarbone/file-object-plus.svg?branch=0.1.5)](https://travis-ci.org/dcarbone/file-object-plus)
 
 ## Basics:
 
 This class is a very simple extension of the base PHP [SplFileObject](http://php.net/manual/en/class.splfileobject.php).
 As such, it has all the same functionality as the base class with a few minor additions.
 
-### Line Counting
+### Countable Interface
 
-One of the more tedious things to do in PHP is count lines in a file.  This library attempts to help in that area with a
-few helper methods:
+I have implemented the [Countable](http://php.net/manual/en/class.countable.php) interface into this class.
+It utilizes my [FileHelper](https://github.com/dcarbone/helpers/blob/master/src/FileHelper.php) helper class
+to determine the count
+
+To use, simply execute:
 
 ```php
-/**
- * @return int
- */
-public function getLineCount();
-
-/**
- * @param string|int|bool|float $string
- * @return int
- * @throws \InvalidArgumentException
- */
-public function getLineCountLike($string);
+$fileObject = new DCarbone\FileObjectPlus('myfile.txt');
+$count = count($fileObject);
+echo $count;
 ```
 
-#### getLineCount
+To count lines that contain a term, execute:
 
-This method will return an integer representing the number of lines found in a file, based upon one of the following
-`shell_exec` commands:
-
-- Windows
-    - `(int)trim(shell_exec('type "'.$this->getRealPath().'" | find /c /v "~~~"'));`
-- Linux-based
-    - `$this->lineCount = (int)trim(shell_exec('wc -l "'.$this->getRealPath().'"'));`
-
-**Note:** If you have suggestions on how to improve this line counting logic, please let me know.  I simply went with what
-I found works.
-
-**Note:** Calling either of these methods resets the object's internal line pointer, so be aware of that.
-
-#### getLineCountLike($string)
-
-This method operates in a slightly more complicated manor.  It will iterate over every line in a file (meaning performance
-could suffer if you have a particularly large file) and executes the PHP method [stripos](!http://php.net/manual/en/function.stripos.php)
-function with the passed in `$string` value.  If result is !== false, that line is added to the response array.
+```php
+$fileObject = new DCarbone\FileObjectPlus('myfile.txt');
+$count = $fileObject->countLinesContaining('my term');
+echo $count;
+```
 
 ### Pagination
 
-I had a need to be able to represent very large files (think Apache-logs on a very active web app) as quickly as possible.
-To that end, I have added the following method:
+This class also implements some very simple pagination methods, modeled closely to how you would
+specify returning a portion of a database table.
+
+To get a portion of a file irrespective of line content:
 
 ```php
-/**
- * @param int $offset
- * @param int $limit
- * @param int|float|string|null $search
- * @return array
- * @throws \InvalidArgumentException
- */
-public function paginateLines($offset = 0, $limit = 25, $search = null);
+$fileObject = new DCarbone\FileObjectPlus('myfile.txt');
+$offset = 0;
+$limit = 25;
+$lines = $fileObject->paginateLines($offset, $limit);
+var_dump($lines);
 ```
 
-This method does exactly what you'd think: iterates over lines in a file, returning an array of strings representing
-the lines that are > $offset, < $limit, and optionally match $search.
+By default, blank lines are also returned.  You may alternatively ignore these by passing in 4 parameters:
 
-**Note:** Calling either of these methods resets the object's internal line pointer, so be aware of that.
+```php
+$fileObject = new \DCarbone\FileObjectPlus('myfile.txt');
+$offset = 0;
+$limit = 25;
+$search = null;
+$includeEmpty = false;
+$lines = $fileObject->paginateLines($offset, $limit, $search, $includeEmpty);
+var_dump($lines);
+```
+
+If you wish to paginate through a file only matching lines that contain a certain term:
+
+```php
+$fileObject = new \DCarbone\FileObjectPlus('myfile.txt');
+$offset = 0;
+$limit = 25;
+$search = 'my term';
+$lines = $fileObject->paginateLines($offset, $limit, $search);
+```
+
+*Note*: When searching, the fourth parameter is ignored
+
+*Note*: Both pagination functions currently reset the underlying SplFileObject's internal line pointer.
