@@ -3,8 +3,7 @@ file-object-plus
 
 A simple extension of the PHP class [SplFileObject](http://php.net/manual/en/class.splfileobject.php)
 
-Build status:
-- master: [![Build Status](https://travis-ci.org/dcarbone/file-object-plus.svg?branch=master)](https://travis-ci.org/dcarbone/file-object-plus)
+Build status: [![Build Status](https://travis-ci.org/dcarbone/file-object-plus.svg?branch=master)](https://travis-ci.org/dcarbone/file-object-plus)
 
 ## Basics:
 
