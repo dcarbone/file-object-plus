@@ -24,7 +24,7 @@
 
     "require" : {
         "php" : ">=5.3.3",
-        "dcarbone/helpers" : "~6.1"
+        "dcarbone/helpers" : "7.0.*"
     },
 
     "require-dev" : {

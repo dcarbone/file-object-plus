@@ -15,7 +15,8 @@
     GNU General Public License for more details.
  */
 
-use DCarbone\Helpers\FileHelper;
+use DCarbone\Helpers\FileShellHelper;
+use DCarbone\Helpers\SystemOSTypeHelper;
 
 /**
  * Class FileObjectPlus
@@ -97,7 +98,11 @@ class FileObjectPlus extends \SplFileObject implements \Countable
      */
     public function count()
     {
-        return FileHelper::getLineCount($this->getRealPath());
+        static $cmd;
+        if (!isset($cmd))
+            $cmd = SystemOSTypeHelper::invoke() === 'windows' ? 'windows-line-count' : 'linux-line-count';
+
+        return FileShellHelper::executeCommand($this->getRealPath(), $cmd);
     }
 
     //---------------
