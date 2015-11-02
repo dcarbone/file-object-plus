@@ -168,7 +168,12 @@ class FileObjectPlus extends \SplFileObject implements \Countable
         parent::rewind();
 
         if (is_bool($term) || is_null($term))
-            trigger_error(sprintf('%s::paginateLines - %s search input seen, which results in empty string when typecast. Please check input value.', get_class($this), gettype($term)));
+        {
+            trigger_error(sprintf(
+                '%s::paginateLines - %s search input seen, which results in empty string when typecast. Please check input value.',
+                get_class($this),
+                gettype($term)));
+        }
 
         if (is_scalar($term) || (is_object($term) && method_exists($term, '__toString')))
         {
@@ -189,6 +194,9 @@ class FileObjectPlus extends \SplFileObject implements \Countable
             return $returnLines;
         }
 
-        throw new \InvalidArgumentException(get_class($this).'::paginateLines - Search value expected to be castable to string, "'.gettype($term).'" seen.');
+        throw new \InvalidArgumentException(sprintf(
+            '%s::paginateLines - Search value expected to be castable to string, "%s" seen.',
+            get_class($this),
+            gettype($term)));
     }
 }
