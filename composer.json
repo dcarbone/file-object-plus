@@ -1,8 +1,9 @@
 {
     "name" : "dcarbone/file-object-plus",
     "type" : "library",
+    "license": "MPL-2.0",
+    "homepage": "https://github.com/dcarbone/file-object-plus",
     "description" : "A simple extension of the PHP \\SplFileObject class",
-
     "keywords": [
         "php",
         "file",
@@ -12,26 +13,25 @@
         "search",
         "pagination"
     ],
-    "homepage": "https://github.com/dcarbone/file-object-plus",
-    "license": "GPLv3",
-
     "authors" : [
         {
             "name" : "Daniel Carbone",
             "email" : "daniel.p.carbone@gmail.com"
         }
     ],
-
     "require" : {
-        "php" : ">=5.3.3",
+        "php" : ">=5.4",
         "dcarbone/helpers" : "7.0.*"
     },
-
-    "require-dev" : {
-        "phpunit/phpunit": "~4.0"
-    },
-
     "autoload" : {
+        "psr-4" : {
+            "DCarbone\\" : "src/"
+        }
+    },
+    "require-dev" : {
+        "phpunit/phpunit": "@stable"
+    },
+    "autoload-dev" : {
         "psr-4" : {
             "DCarbone\\" : "src/"
         }
